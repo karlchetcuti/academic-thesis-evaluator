@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Academic Thesis Evaluator</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+        <link href="https://fonts.googleapis.com/css2?family=Jersey+25&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+        <script src="https://kit.fontawesome.com/3c07a1e5cc.js" crossorigin="anonymous"></script>
+    </head>
+    <body>
+        <div class="page-title">
+            <img class="owl-img" src="{{ url_for('static', filename='images/owl2.png') }}">
+            <h1>Academic Thesis Evaluator</h1>
+        </div>
+        <div class="container">
+            <p>
+                The evaluator will predict the grade of your thesis and provide feedback and suggestions for any possible improvements that can be made.
+                This process is done using a combination of data gathered from past years and the relevant undergraduate guidelines for the IT faculty at the University of Malta.
+                <br><br>
+                Please remember that this is an experimental project and has no certainty of yielding 100% correct results.
+                Kindly note that it is best to remove all appendices from your thesis before submitting it for evaluation.
+                <br><br>
+                To get started, simply press the below button and upload your thesis in PDF format.
+                The evaluator will then process your document and return a predicted grade along with feedback.
+                You have a maximum limit of 3 uses of the evaluator.
+                <br><br>
+                Once the evaluation is complete, a link will be provided to a form where you may submit feedback on your experience with the evaluator.
+            </p>
+            {% if not error %}
+            <button type="submit" class="btn" id="submit-btn" onclick="openPopup()">Submit PDF</button>
+            {% endif %}
+        </div>
+        <div class="popup" id="popup">
+            <i class="fa-solid fa-xmark" id="close"></i>
+            <p>Upload your thesis here.</p>
+            <!--Send post request to server upon submit-->
+            <form class="form" method='POST' id='fileinput' enctype='multipart/form-data'>
+                {% if form %}
+                <!--Protection against CSRF attacks-->
+                {{form.hidden_tag()}}
+                <!--Choose File button-->
+                {{form.file(class='form-btn')}}
+                <!--Upload File button-->
+                {{form.submit(class='form-btn')}}
+                {% endif %}
+            </form>
+        </div>
+        <div class="loader">
+            <div class="ring"></div>
+        </div>
+        <div id="overlay" class="overlay"></div>
+        {% if classification or evaluation or error %}
+        <div class="feedback-container" id="feedback-container">
+            {% if classification == 'A' %}
+            <img class="clf" src="{{ url_for('static', filename='images/grade-a.png') }}">
+            {% elif classification == 'B' %}
+            <img class="clf" src="{{ url_for('static', filename='images/grade-b.png') }}">
+            {% elif classification == 'C' %}
+            <img class="clf" src="{{ url_for('static', filename='images/grade-c.png') }}">
+            {% elif classification == 'D' %}
+            <img class="clf" src="{{ url_for('static', filename='images/grade-d.png') }}">
+            {% elif classification == 'F' %}
+            <img class="clf" src="{{ url_for('static', filename='images/grade-f.png') }}">
+            {% endif %}
+            {% if "This document does not appear to be a thesis. Please make sure that you submitted the correct paper." in evaluation
+            or "The evaluator failed to process your document. Your text may be too long. Please make sure all appendices have been removed and re-upload it." in evaluation
+            or "An unexpected error occurred." in evaluation 
+            or error %}
+            <img class="clf" src="{{ url_for('static', filename='images/warning.png') }}">
+            {% endif %}
+            {% if error %}
+            <pre class="eval" id="servererror">{{ error }}</pre>
+            <script>
+                function getFormSubmissionCount() {
+                    if (localStorage.getItem('formSubmissionCount')) {
+                        return parseInt(localStorage.getItem('formSubmissionCount'));
+                    } else {
+                        localStorage.setItem('formSubmissionCount', '0');
+                        return 0;
+                    }
+                }
+                const submissionCount = getFormSubmissionCount();
+                const updatedCount = submissionCount - 1;
+                localStorage.setItem('formSubmissionCount', updatedCount.toString());
+            </script>
+            {% endif %}
+            <pre class="eval">{{ evaluation }}</pre>
+        </div>
+        {% if not error %}
+        <div class="feedback" id="feedback">
+            <p>
+                Thank you for using the evaluator. Please feel free to leave feedback <a class="form-link" href="https://forms.gle/CDyYEFZ7Z7v73Zix7">here</a>.
+            </p>
+        </div>
+        {% endif %}
+        {% endif %}
+        <script type="text/javascript" src="{{ url_for('static', filename='js/app.js') }}"></script>
+    </body>
+</html>
